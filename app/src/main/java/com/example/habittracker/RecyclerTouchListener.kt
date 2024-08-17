@@ -343,7 +343,7 @@ class RecyclerTouchListener(var act: Activity, recyclerView: RecyclerView) :
                         val downView =
                             touchedView // touchedView gets null'd before animation ends
                         val downPosition = touchedPosition
-                        //TODO - speed
+
                         animateFG(touchedView, Animation.OPEN, ANIMATION_STANDARD)
                         bgVisible = true
                         bgVisibleView = fgView
@@ -355,7 +355,6 @@ class RecyclerTouchListener(var act: Activity, recyclerView: RecyclerView) :
                             touchedView // touchedView gets null'd before animation ends
                         val downPosition = touchedPosition
 
-                        //TODO - speed
                         animateFG(touchedView, Animation.CLOSE, ANIMATION_STANDARD)
                         bgVisible = false
                         bgVisibleView = null

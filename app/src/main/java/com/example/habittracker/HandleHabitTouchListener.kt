@@ -438,11 +438,9 @@ class HandleHabitTouchListener(var act: Activity, recyclerView: RecyclerView) :
     }
 
     override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-        TODO("Not yet implemented")
     }
 
     override fun getTouchCoordinates(ev: MotionEvent) {
-        TODO("Not yet implemented")
     }
 
     companion object {
