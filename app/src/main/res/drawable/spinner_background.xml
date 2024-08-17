@@ -1,0 +1,18 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="4dp" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/black" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/ic_arrow_down"
+        android:right="8dp"
+        android:top="8dp"
+        android:bottom="8dp"
+        android:left="8dp"
+        android:gravity="right|center_vertical" />
+</layer-list>

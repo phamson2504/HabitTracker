@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="cream">#9E8181</color>
+    <color name="back_ground_item_calendar">#E7DEDE</color>
+    <color name="light_blue">#419DFF</color>
+    <color name="colorSwitchThumbOff">#636364</color>
+    <color name="colorSwitchTrackOff">#96989B</color>
+    <color name="colorSwitchThumbOn">#2F94E4</color>
+    <color name="colorSwitchTrackOn">#97BDDC</color>
+</resources>

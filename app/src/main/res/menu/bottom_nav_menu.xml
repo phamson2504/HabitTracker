@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_tasks"
+        android:icon="@drawable/baseline_task_24"
+        android:title="Tasks" />
+    <item
+        android:id="@+id/navigation_calendar"
+        android:icon="@drawable/baseline_edit_calendar_24"
+        android:title="Calendar" />
+    <item
+        android:id="@+id/navigation_progress"
+        android:icon="@drawable/progress"
+        android:title="Progress" />
+</menu>
