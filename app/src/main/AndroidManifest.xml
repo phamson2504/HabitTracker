@@ -14,17 +14,17 @@
         android:theme="@style/Theme.HabitTracker"
         tools:targetApi="31">
         <activity
-            android:name=".InforHabitActivity"
+            android:name=".ui.InforHabitActivity"
             android:exported="false" />
         <activity
-            android:name=".ScheduleAddActivity"
+            android:name=".ui.ScheduleAddActivity"
             android:exported="false" />
         <activity
-            android:name=".ScheduleEditActivity"
+            android:name=".ui.ScheduleEditActivity"
             android:exported="false"
             android:theme="@style/Theme.HabitTracker" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

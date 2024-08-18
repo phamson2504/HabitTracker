@@ -1,4 +1,4 @@
-package com.example.habittracker
+package com.example.habittracker.ui
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -19,6 +19,9 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.example.habittracker.R
+import com.example.habittracker.RepeatTaskMonthly
+import com.example.habittracker.RepeatTaskWeekly
 import com.example.habittracker.adapter.ItemTimeRemindAdapter
 import com.example.habittracker.conversation.OnDataPassDatePickOfWeekly
 import com.example.habittracker.conversation.OnDataPassDaysPickOfMonthLy
@@ -26,7 +29,6 @@ import com.example.habittracker.database.DatabaseHelper
 import com.example.habittracker.database.HabitDAOImpl
 import com.example.habittracker.model.Habit
 import com.example.habittracker.model.Schedule
-import com.example.habittracker.ui.HomeFragment
 import com.google.android.material.switchmaterial.SwitchMaterial
 import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter
@@ -52,11 +54,14 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
     private val daysPickWeekly = ArrayList<String>()
     private lateinit var txtSave: TextView
     private lateinit var dataByTypeOfTime: MutableMap<Int, Boolean>
+    private var timeForHabit = 0
+    private var numOfTime = 0
     private var everyRepeatMonthly = 0
     private var everyRepeatWeekly = 0
     private lateinit var habitDAO: HabitDAOImpl
     private val dbHelper = DatabaseHelper(this)
     private lateinit var mySwitch: SwitchMaterial
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -116,7 +121,6 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
             val params = numOrTimeHabit.layoutParams
             params.height = editTextHeight
             numOrTimeHabit.layoutParams = params
-
             numOrTimeHabit.hint = "Times"
             txtNumOfTimes.isEnabled = false
             txtTimeForHabit.isEnabled = true
@@ -125,7 +129,16 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
             dataByTypeOfTime[txtNumOfTimes.id] = true
             dataByTypeOfTime[txtTimeForHabit.id] = false
 
+            if (numOrTimeHabit.text.toString() != ""){
+                timeForHabit =  numOrTimeHabit.text.toString().toInt()
+            }
+
             numOrTimeHabit.text = ""
+
+            if (numOfTime != 0){
+                numOrTimeHabit.text = "$numOfTime"
+            }
+
             txtNumOfTimes.setTextColor(Color.BLACK)
             txtNumOfTimes.setBackgroundResource(R.drawable.background_textview_button)
             txtTimeForHabit.setBackgroundResource(R.drawable.background_textview_button_non_select)
@@ -145,7 +158,14 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
             dataByTypeOfTime[txtTimeForHabit.id] = true
             dataByTypeOfTime[txtNumOfTimes.id] = false
 
+            if (numOrTimeHabit.text.toString() != ""){
+                numOfTime =  numOrTimeHabit.text.toString().toInt()
+            }
             numOrTimeHabit.text = ""
+            if (timeForHabit != 0){
+                numOrTimeHabit.text = "$timeForHabit"
+            }
+
             txtTimeForHabit.setTextColor(Color.BLACK)
             txtTimeForHabit.setBackgroundResource(R.drawable.background_textview_button)
             txtNumOfTimes.setBackgroundResource(R.drawable.background_textview_button_non_select)
@@ -198,8 +218,9 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
 
         val datePicker: View = findViewById(R.id.datePicker)
         datePicker.setOnClickListener {
-            datePickerAction()
+            datePickerAction(textDuDate)
         }
+
 
         val myLayout: LinearLayout = findViewById(R.id.layout_repeat)
         mySwitch = findViewById(R.id.material_switch)
@@ -289,6 +310,10 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
             Toast.makeText(this, "Please enter name habit", Toast.LENGTH_SHORT).show()
             return false
         }
+        if (habitDAO.getHabitByName(txtNameHabit.text.toString()) != null){
+            Toast.makeText(this, "Habit has existed", Toast.LENGTH_SHORT).show()
+            return false
+        }
         val numOfTime = if (dataByTypeOfTime[txtNumOfTimes.id] == true) {
             if (numOrTimeHabit.text.toString() != "") numOrTimeHabit.text.toString().toInt() else 0
         } else {
@@ -309,7 +334,7 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
                 Toast.makeText(this, "Please select at least 1 day", Toast.LENGTH_SHORT).show()
             } else {
                 val dueDate = if (textDuDate.text.toString() == "_/_/_") {
-                    currentDate.plusWeeks(everyRepeatMonthly.toLong()).format(formatter)
+                    currentDate.plusMonths(everyRepeatMonthly.toLong()).format(formatter)
                 }else{
                     convertDate(textDuDate.text.toString()).toString()
                 }
@@ -459,7 +484,7 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
         }
     }
 
-    private fun datePickerAction() {
+    private fun datePickerAction(textView: TextView) {
         val c = Calendar.getInstance()
         val year = c.get(Calendar.YEAR)
         val month = c.get(Calendar.MONTH)
@@ -469,7 +494,7 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
             this,
             R.style.MyDatePickerDialogTheme,
             { view, year, monthOfYear, dayOfMonth ->
-                textDuDate.text =
+                textView.text =
                     (dayOfMonth.toString() + "/" + (monthOfYear + 1) + "/" + year)
             },
             year,

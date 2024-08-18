@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ScheduleAddActivity">
+    tools:context=".ui.ScheduleAddActivity">
     <ScrollView
         android:layout_marginTop="30dp"
         android:id="@+id/scrollScheduleView"
@@ -140,7 +140,7 @@
                     android:inputType="number"
                     android:importantForAutofill="no"
                     android:paddingHorizontal="15dp"
-                    android:maxLength="4"
+                    android:maxLength="5"
                     android:textSize="18sp" />
             </LinearLayout>
 

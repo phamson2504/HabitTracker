@@ -3,11 +3,11 @@ package com.example.habittracker.database
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
-import com.example.habittracker.entity.HabitHandle
 import com.example.habittracker.model.Habit
 import com.example.habittracker.model.Schedule
 import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.temporal.TemporalAdjusters
 
 class HabitDAOImpl(private val context: Context, private val dbHelper: DatabaseHelper) : HabitDAO {
 
@@ -47,6 +47,22 @@ class HabitDAOImpl(private val context: Context, private val dbHelper: DatabaseH
         TODO("Not yet implemented")
     }
 
+    override fun getHabitByName(nameHabit: String): Habit? {
+        val db = dbHelper.writableDatabase
+        val query = """ 
+            SELECT *  
+            FROM ${DatabaseHelper.TABLE_HABIT} 
+            WHERE ${DatabaseHelper.COLUMN_NAME_HABIT} = :nameHabit
+            """
+        val cursor = db.rawQuery(query, arrayOf(nameHabit))
+        return if (cursor.moveToFirst()) {
+            cursorToHabit(cursor)
+        } else {
+            null
+        }
+
+    }
+
     override fun getAllHabits(): List<Habit> {
         val db = dbHelper.writableDatabase
         val listHabit = mutableListOf<Habit>()
@@ -66,9 +82,9 @@ class HabitDAOImpl(private val context: Context, private val dbHelper: DatabaseH
 
         // Filter habits by the current day of the week
         val dayOfWeek = date.format(DateTimeFormatter.ofPattern("EEEE"))
-        val dayOfMonth =  date.format(DateTimeFormatter.ofPattern("dd"))
+        val dayOfMonth = date.format(DateTimeFormatter.ofPattern("dd"))
 
-        return filterHabitsByDayOfWeek(habits, dayOfWeek, dayOfMonth)
+        return filterHabitsByDayOfWeek(habits, dayOfWeek, dayOfMonth, date)
     }
 
     override fun getHabitsByDate(selectDate: String): List<Habit> {
@@ -109,7 +125,12 @@ class HabitDAOImpl(private val context: Context, private val dbHelper: DatabaseH
         TODO("Not yet implemented")
     }
 
-    private fun filterHabitsByDayOfWeek(habits: List<Habit>, currentDayOfWeek: String, currentDay : String): List<Habit> {
+    private fun filterHabitsByDayOfWeek(
+        habits: List<Habit>,
+        currentDayOfWeek: String,
+        currentDay: String,
+        currentDate: LocalDate
+    ): List<Habit> {
         val filteredHabits = mutableListOf<Habit>()
 
         for (habit in habits) {
@@ -121,9 +142,15 @@ class HabitDAOImpl(private val context: Context, private val dbHelper: DatabaseH
                 }
             } else if (schedule is Schedule.ScheduleEveryDayRepeat) {
                 filteredHabits.add(habit)
-            } else if (schedule is Schedule.MonthlySchedule){
+            } else if (schedule is Schedule.MonthlySchedule) {
                 val daysInMonth = schedule.dateInMonth ?: emptyList()
-                if (daysInMonth.contains(currentDay)){
+                if (daysInMonth.contains("last")){
+                    val lastDate =currentDate.with(TemporalAdjusters.lastDayOfMonth()).dayOfMonth
+                    if (lastDate.toString() == currentDay){
+                        filteredHabits.add(habit)
+                    }
+                }
+                if (daysInMonth.contains(currentDay.toInt().toString())) {
                     filteredHabits.add(habit)
                 }
             } else {

@@ -14,7 +14,6 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ListView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener
-import com.example.habittracker.RecyclerTouchListener.OnSwipeListener
 import com.example.habittracker.conversation.OnActivityTouchListener
 import kotlin.math.abs
 

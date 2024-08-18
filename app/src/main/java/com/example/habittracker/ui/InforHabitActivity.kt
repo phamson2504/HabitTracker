@@ -1,4 +1,4 @@
-package com.example.habittracker
+package com.example.habittracker.ui
 
 import android.content.Intent
 import android.os.Bundle
@@ -10,12 +10,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.habittracker.R
 import com.example.habittracker.adapter.HabitCalendarInfoAdapter
 import com.example.habittracker.database.CompletionRecordDAO
 import com.example.habittracker.database.CompletionRecordDAOImpl
 import com.example.habittracker.database.DatabaseHelper
 import com.example.habittracker.entity.HabitHandle
-import com.example.habittracker.model.Habit
 import com.example.habittracker.model.Schedule
 import org.threeten.bp.DayOfWeek
 import org.threeten.bp.LocalDate
@@ -161,7 +161,7 @@ class InforHabitActivity : AppCompatActivity() {
 
         var day = dateStart
         val dayHaveToSet = mutableListOf<LocalDate>()
-        while (!day.isAfter(lastDayOfMonth)) {
+        while (!day.isAfter(lastDayOfMonth) && !day.equals(lastDayOfMonth)) {
             if (schedule is Schedule.WeeklySchedule) {
                 val daysInWeek = schedule.daysInWeek ?: emptyList()
                 if (daysInWeek.contains(day.format(DateTimeFormatter.ofPattern("EEEE")))) {
@@ -171,6 +171,12 @@ class InforHabitActivity : AppCompatActivity() {
                 dayHaveToSet.add(day)
             } else if (schedule is Schedule.MonthlySchedule){
                 val daysInMonth = schedule.dateInMonth ?: emptyList()
+                if (daysInMonth.contains("last")){
+                    val lastDate = selectedDate.with(TemporalAdjusters.lastDayOfMonth()).dayOfMonth.toString()
+                    if (lastDate == day.dayOfMonth.toString()){
+                        dayHaveToSet.add(day)
+                    }
+                }
                 if (daysInMonth.contains(day.dayOfMonth.toString())){
                     dayHaveToSet.add(day)
                 }

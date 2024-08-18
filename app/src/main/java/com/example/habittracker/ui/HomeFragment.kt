@@ -18,9 +18,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.habittracker.HandleHabitTouchListener
-import com.example.habittracker.InforHabitActivity
 import com.example.habittracker.R
-import com.example.habittracker.ScheduleAddActivity
 import com.example.habittracker.adapter.CalendarAdapter
 import com.example.habittracker.adapter.HabitHandleCalendarAdapter
 import com.example.habittracker.database.CompletionRecordDAO
@@ -30,7 +28,6 @@ import com.example.habittracker.database.HabitDAOImpl
 import com.example.habittracker.entity.HabitHandle
 import com.example.habittracker.model.CompletionRecord
 import com.example.habittracker.model.Habit
-import com.example.habittracker.model.Schedule
 import org.threeten.bp.DayOfWeek
 import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter

@@ -1,17 +1,15 @@
 package com.example.habittracker.adapter
 
-import android.app.Activity
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageButton
-import android.widget.ListView
 import android.widget.TextView
 import com.example.habittracker.R
-import com.example.habittracker.ScheduleAddActivity
-import com.example.habittracker.ScheduleEditActivity
+import com.example.habittracker.ui.ScheduleAddActivity
+import com.example.habittracker.ui.ScheduleEditActivity
 
 class ItemTimeRemindAdapter(
     private val context: Context,

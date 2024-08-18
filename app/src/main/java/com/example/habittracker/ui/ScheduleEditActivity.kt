@@ -1,4 +1,4 @@
-package com.example.habittracker
+package com.example.habittracker.ui
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -6,6 +6,7 @@ import android.app.TimePickerDialog
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
@@ -17,17 +18,25 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.example.habittracker.R
+import com.example.habittracker.RepeatTaskMonthly
+import com.example.habittracker.RepeatTaskWeekly
 import com.example.habittracker.adapter.ItemTimeRemindAdapter
 import com.example.habittracker.conversation.OnDataPassDatePickOfWeekly
 import com.example.habittracker.conversation.OnDataPassDaysPickOfMonthLy
+import com.example.habittracker.database.DatabaseHelper
+import com.example.habittracker.database.HabitDAOImpl
 import com.example.habittracker.entity.HabitHandle
+import com.example.habittracker.model.Habit
 import com.example.habittracker.model.Schedule
 import com.google.android.material.switchmaterial.SwitchMaterial
+import org.threeten.bp.format.DateTimeFormatter
 import java.util.Calendar
 
 class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDeleteListener,
     OnDataPassDaysPickOfMonthLy, OnDataPassDatePickOfWeekly {
     private lateinit var textDuDate: TextView
+    private lateinit var textStartDate: TextView
     private lateinit var textNameHabit: TextView
     private lateinit var numOrTimeHabit: TextView
     private lateinit var txtNumOfTimes: TextView
@@ -35,22 +44,29 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
     private lateinit var txtTask: TextView
     private lateinit var txtNote: TextView
 
+    private var timeForHabit = 0
+    private var numOfTime = 0
     private lateinit var listView: ListView
     private lateinit var adapter: ItemTimeRemindAdapter
-    private val items = ArrayList<String>()
+    private val timeReminds = ArrayList<String>()
     private val daysPickWeekly = ArrayList<String>()
     private lateinit var titleHandle: TextView
     private var habitHandle: HabitHandle? = null
     private val daysPickMonthly = ArrayList<String>()
     private var everyRepeatWeekly = 0
     private lateinit var dataByTypeOfTime: MutableMap<Int, Boolean>
+    private lateinit var habitDAO: HabitDAOImpl
+    private val dbHelper = DatabaseHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_schedule_edit)
-        textDuDate = findViewById(R.id.textDuDate)
 
+        habitDAO = HabitDAOImpl(this, dbHelper)
+
+        textDuDate = findViewById(R.id.textDuDate)
+        textStartDate = findViewById(R.id.textStartDate)
         textNameHabit = findViewById(R.id.txtNameHabit)
         numOrTimeHabit = findViewById(R.id.numOrTimeHabit)
         txtTimeForHabit = findViewById(R.id.txtTimeForHabit)
@@ -78,7 +94,7 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
             val params = numOrTimeHabit.layoutParams
             params.height = 0
             numOrTimeHabit.layoutParams = params
-            "".also { numOrTimeHabit.text = it }
+            numOrTimeHabit.text = ""
             txtTask.isEnabled = false
             txtNumOfTimes.isEnabled = true
             txtTimeForHabit.isEnabled = true
@@ -97,7 +113,6 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
             val params = numOrTimeHabit.layoutParams
             params.height = editTextHeight
             numOrTimeHabit.layoutParams = params
-
             numOrTimeHabit.hint = "Times"
             txtNumOfTimes.isEnabled = false
             txtTimeForHabit.isEnabled = true
@@ -106,7 +121,16 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
             dataByTypeOfTime[txtNumOfTimes.id] = true
             dataByTypeOfTime[txtTimeForHabit.id] = false
 
-            "".also { numOrTimeHabit.text = it }
+            if (numOrTimeHabit.text.toString() != ""){
+                timeForHabit =  numOrTimeHabit.text.toString().toInt()
+            }
+
+            numOrTimeHabit.text = ""
+
+            if (numOfTime != 0){
+                numOrTimeHabit.text = "$numOfTime"
+            }
+
             txtNumOfTimes.setTextColor(Color.BLACK)
             txtNumOfTimes.setBackgroundResource(R.drawable.background_textview_button)
             txtTimeForHabit.setBackgroundResource(R.drawable.background_textview_button_non_select)
@@ -126,7 +150,14 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
             dataByTypeOfTime[txtTimeForHabit.id] = true
             dataByTypeOfTime[txtNumOfTimes.id] = false
 
-            "".also { numOrTimeHabit.text = it }
+            if (numOrTimeHabit.text.toString() != ""){
+                numOfTime =  numOrTimeHabit.text.toString().toInt()
+            }
+            numOrTimeHabit.text = ""
+            if (timeForHabit != 0){
+                numOrTimeHabit.text = "$timeForHabit"
+            }
+
             txtTimeForHabit.setTextColor(Color.BLACK)
             txtTimeForHabit.setBackgroundResource(R.drawable.background_textview_button)
             txtNumOfTimes.setBackgroundResource(R.drawable.background_textview_button_non_select)
@@ -158,7 +189,10 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
         if ( schedule is Schedule.MonthlySchedule) {
             repeatTaskMonthly = RepeatTaskMonthly.newInstance(schedule.dateInMonth)
         }else if (schedule is Schedule.WeeklySchedule){
-            repeatTaskWeekly = RepeatTaskWeekly.newInstance(schedule.daysInWeek, schedule.numOfWeekRepeat.toString() + " Week")
+            repeatTaskWeekly = RepeatTaskWeekly.newInstance(
+                schedule.daysInWeek,
+                schedule.numOfWeekRepeat.toString() + " Week"
+            )
         }
 
         textDailyClick.setOnClickListener {
@@ -189,7 +223,12 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
 
         val datePicker: View = findViewById(R.id.datePicker)
         datePicker.setOnClickListener {
-            datePickerAction()
+            datePickerAction(textDuDate)
+        }
+
+        val startDatePicker: View = findViewById(R.id.datePickerStartDate)
+        startDatePicker.setOnClickListener {
+            datePickerAction(textStartDate)
         }
 
         val myLayout: LinearLayout = findViewById(R.id.layout_repeat)
@@ -257,7 +296,7 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
 
         }
         if(schedule?.timeReminds!!.isNotEmpty()){
-            items.addAll(schedule.timeReminds!!)
+            timeReminds.addAll(schedule.timeReminds!!)
         }
 
         val layoutClickNote: View = findViewById(R.id.layoutClickNoteEdit)
@@ -267,10 +306,121 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
 
         txtNote.text = habit?.description
 
-        adapter = ItemTimeRemindAdapter(this, items, this)
+        adapter = ItemTimeRemindAdapter(this, timeReminds, this)
 
         listView.adapter = adapter
 
+    }
+    private fun saveEditHabit() : Boolean {
+        val habit: Habit
+        var schedule: Schedule? = null
+        textNameHabit
+        txtNote
+        timeReminds
+        if (textNameHabit.text.isNullOrBlank()) {
+            Toast.makeText(this, "Please enter name habit", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (habitDAO.getHabitByName(textNameHabit.text.toString()) != null){
+            Toast.makeText(this, "Habit has existed", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        val numOfTime = if (dataByTypeOfTime[txtNumOfTimes.id] == true) {
+            if (numOrTimeHabit.text.toString() != "") numOrTimeHabit.text.toString().toInt() else 0
+        } else {
+            0
+        }
+
+        val timeForHabit = if (dataByTypeOfTime[txtTimeForHabit.id] == true) {
+            if (numOrTimeHabit.text.toString() != "") numOrTimeHabit.text.toString().toInt() else 0
+        } else {
+            0
+        }
+
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+        // create schedule
+//        if (supportFragmentManager.findFragmentByTag("Monthly_TAG") != null) {
+//            if (daysPickMonthly.size == 0) {
+//                Toast.makeText(this, "Please select at least 1 day", Toast.LENGTH_SHORT).show()
+//            } else {
+//                val dueDate = if (textDuDate.text.toString() == "_/_/_") {
+//                    currentDate.plusWeeks(everyRepeatMonthly.toLong()).format(formatter)
+//                }else{
+//                    convertDate(textDuDate.text.toString()).toString()
+//                }
+//                schedule = Schedule.MonthlySchedule(
+//                    currentDate.format(formatter),
+//                    dueDate,
+//                    numOfTime,
+//                    timeForHabit,
+//                    timeReminds,
+//                    daysPickMonthly,
+//                    everyRepeatMonthly
+//                )
+//            }
+//        } else if (supportFragmentManager.findFragmentByTag("Weekly_TAG") != null) {
+//            if (daysPickWeekly.size == 0) {
+//                Toast.makeText(this, "Please select at least 1 date", Toast.LENGTH_SHORT).show()
+//            } else {
+//                val dueDate = if (textDuDate.text.toString() == "_/_/_") {
+//                    currentDate.plusWeeks(everyRepeatWeekly.toLong()).format(formatter)
+//                }else{
+//                    convertDate(textDuDate.text.toString()).toString()
+//                }
+//                schedule = Schedule.WeeklySchedule(
+//                    currentDate.format(formatter),
+//                    dueDate,
+//                    numOfTime,
+//                    timeForHabit,
+//                    timeReminds,
+//                    daysPickWeekly,
+//                    everyRepeatWeekly
+//                )
+//            }
+//        } else if (mySwitch.isChecked) {
+//            if (textDuDate.text.toString() != "_/_/_"){
+//                schedule = Schedule.ScheduleEveryDayRepeat(
+//                    startDate = currentDate.format(formatter),
+//                    convertDate(textDuDate.text.toString()).toString(),
+//                    numOfTime = numOfTime,
+//                    timeForHabit = timeForHabit,
+//                    timeReminds = timeReminds
+//                )
+//
+//            }else{
+//                schedule = Schedule.ScheduleEveryDayRepeat(
+//                    startDate = currentDate.format(formatter),
+//                    "",
+//                    numOfTime = numOfTime,
+//                    timeForHabit = timeForHabit,
+//                    timeReminds = timeReminds,
+//                    repeatInfinitely = 1
+//                )
+//            }
+//
+//        } else {
+//            schedule = Schedule.ScheduleNotRepeat(
+//                startDate = currentDate.format(formatter),
+//                numOfTime = numOfTime,
+//                timeForHabit = timeForHabit,
+//                timeReminds = timeReminds
+//            )
+//        }
+//        // create habit
+//        if (schedule != null) {
+//            habit = Habit(
+//                name = txtNameHabit.text.toString(),
+//                description = txtNote.text.toString(),
+//                schedule = schedule
+//            )
+//            Log.e("habit", "habit: ${habit}")
+//            habitDAO.insertHabit(habit) { exception ->
+//                Log.e("DatabaseError", "Failed to add habit and schedule: ${exception.message}")
+//            }
+//
+//        }
+        return true
     }
 
     override fun onBackPressed() {
@@ -334,7 +484,7 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
         }
     }
 
-    private fun datePickerAction() {
+    private fun datePickerAction(textView: TextView) {
         val c = Calendar.getInstance()
         val year = c.get(Calendar.YEAR)
         val month = c.get(Calendar.MONTH)
@@ -344,7 +494,7 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
             this,
             R.style.MyDatePickerDialogTheme,
             { view, year, monthOfYear, dayOfMonth ->
-                textDuDate.text =
+                textView.text =
                     (buildString {
                         append(dayOfMonth.toString())
                         append("/")
@@ -372,7 +522,7 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
             R.style.CustomTimePickerDialog,
             { _, selectedHour, selectedMinute ->
                 val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
-                items.add(formattedTime)
+                timeReminds.add(formattedTime)
                 adapter.notifyDataSetChanged()
 
             },
@@ -408,7 +558,7 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
     }
 
     override fun onItemDelete(position: Int) {
-        items.removeAt(position)
+        timeReminds.removeAt(position)
         adapter.notifyDataSetChanged()
     }
 
