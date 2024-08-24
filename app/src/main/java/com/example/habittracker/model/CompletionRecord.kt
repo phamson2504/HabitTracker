@@ -7,5 +7,6 @@ data class CompletionRecord(
     val numOfTimesCompleted: Int = 0,
     val timeForHabit: Int = 0,
     val isCompleted: Int = 0,
-    val habitId: Long
+    val habitId: Long,
+    var currentOperationalStatus: Int = 1
 ): Serializable

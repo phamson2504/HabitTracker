@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:fitsSystemWindows="true"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.InforHabitActivity">
+
     <LinearLayout
-        android:layout_marginTop="30dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -19,26 +23,30 @@
             android:orientation="horizontal">
 
             <ImageButton
+                android:id="@+id/back_previous"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:id="@+id/back_previous"
                 android:background="@android:color/transparent"
                 android:importantForAccessibility="no"
                 android:scaleType="centerInside"
                 android:src="@drawable/arrow_icon" />
+
             <Space
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
+
             <ImageButton
+                android:id="@+id/clickHabitEdit"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:id="@+id/clickHabitEdit"
                 android:background="@android:color/transparent"
                 android:importantForAccessibility="no"
                 android:scaleType="centerInside"
                 android:src="@drawable/edit_icon" />
+
             <ImageButton
+                android:id="@+id/delete_icon"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
@@ -49,9 +57,9 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_marginHorizontal="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
             android:layout_marginTop="50dp"
             android:orientation="vertical">
 
@@ -59,10 +67,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
+
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -72,6 +82,7 @@
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -198,9 +209,9 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_marginHorizontal="10dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
             android:layout_marginTop="90dp"
             android:gravity="center"
             android:orientation="horizontal">
@@ -221,17 +232,35 @@
                     android:layout_height="30dp"
                     android:src="@drawable/presentation" />
 
-                <TextView
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="50%"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/percentProcess"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="50"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="%"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        app:layout_constraintLeft_toRightOf="@+id/percentProcess"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="habit completion rate"
+                    android:text="habit process rate"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -248,12 +277,29 @@
                     android:layout_height="30dp"
                     android:src="@drawable/approved" />
 
-                <TextView
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="50%"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/completionRate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="50"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="%"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        app:layout_constraintLeft_toRightOf="@+id/completionRate"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <TextView
                     android:layout_width="wrap_content"

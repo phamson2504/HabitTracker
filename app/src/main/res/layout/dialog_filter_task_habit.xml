@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_filter"
+            app:tint="#5D86A6" />
+        <TextView
+            android:layout_marginStart="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose Habit"
+            android:textStyle="bold"
+            android:textSize="20sp"/>
+    </LinearLayout>
+
+    <CheckBox
+        android:layout_marginTop="10dp"
+        android:id="@+id/checkBoxNoRepeat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No Repeat" />
+    <CheckBox
+        android:id="@+id/checkBoxDaily"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Daily" />
+
+    <CheckBox
+        android:id="@+id/checkBoxWeekly"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Weekly" />
+
+    <CheckBox
+        android:id="@+id/checkBoxMonthly"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Monthly" />
+</LinearLayout>

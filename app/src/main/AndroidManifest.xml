@@ -18,11 +18,12 @@
             android:exported="false" />
         <activity
             android:name=".ui.ScheduleAddActivity"
-            android:exported="false" />
+            android:exported="false"
+            />
         <activity
             android:name=".ui.ScheduleEditActivity"
             android:exported="false"
-            android:theme="@style/Theme.HabitTracker" />
+            />
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">

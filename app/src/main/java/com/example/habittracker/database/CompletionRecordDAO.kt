@@ -12,4 +12,7 @@ interface CompletionRecordDAO {
     fun getCompletionRecordInMonthByHabitId(habitId: String, date: LocalDate): ArrayList<CompletionRecord>
     fun updateCompletionRecord(completionRecord: CompletionRecord, date: LocalDate): Int
     fun getCompletionRecordsByHabits(habits: ArrayList<Habit>, date: LocalDate): List<HabitHandle>
+    fun getCompletionRecordByHabitId(habitId: String): MutableList<CompletionRecord>
+    fun deleteCompletionRecordById(habitId: String): Int
+    fun updateActiveCompletion(completionRecord: CompletionRecord): Int
 }

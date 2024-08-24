@@ -9,4 +9,9 @@
     <color name="colorSwitchTrackOff">#96989B</color>
     <color name="colorSwitchThumbOn">#2F94E4</color>
     <color name="colorSwitchTrackOn">#97BDDC</color>
+    <color name="bottom_nav_active_color">#E46137</color>
+    <color name="navigation_bar_color">#E46137</color>
+    <color name="bottom_nav_inactive_color">#757575</color>
+    <color name="purple_500">#6200EE</color>
+    <color name="teal_700">#018786</color>
 </resources>

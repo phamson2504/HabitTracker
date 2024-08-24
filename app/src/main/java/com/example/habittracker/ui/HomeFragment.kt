@@ -53,9 +53,9 @@ class HomeFragment : Fragment(), HabitHandleCalendarAdapter.OnHabitClickListener
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-//        dbHelper = DatabaseHelper(requireContext())
-//        dbHelper.resetDatabase()
         dbHelper = DatabaseHelper(requireContext())
+//        dbHelper.resetDatabase()
+
         habitDAOImpl = HabitDAOImpl(requireContext(), dbHelper)
         completionRecordDAO = CompletionRecordDAOImpl(requireContext(), dbHelper)
 
@@ -333,7 +333,6 @@ class HomeFragment : Fragment(), HabitHandleCalendarAdapter.OnHabitClickListener
             }
             typeOfHabit.text = "minutes"
         }
-        val initValue = numEditForHabit.text.toString()
         nameHabit.text = habit.name
 
 
@@ -366,53 +365,49 @@ class HomeFragment : Fragment(), HabitHandleCalendarAdapter.OnHabitClickListener
         val cancelButton = dialogView.findViewById<TextView>(R.id.cancelButton)
 
         okButton.setOnClickListener {
-            if (initValue != numOfHabitEditText.text.toString()) {
-                val completion: CompletionRecord
-                if (completionRecord == null) {
-                    completion = if (habit.schedule?.numOfTime != 0) {
-                        habit.completionRecordForToday(
-                            numOfTimesCompleted = numOfHabitEditText.text.toString().toInt(),
-                            timeForHabit = 0,
-                            selectDate = selectedDate,
-                            isSetTimeOrNumHabit = true
-                        )
-                    } else {
-                        habit.completionRecordForToday(
-                            numOfTimesCompleted = 0,
-                            timeForHabit = numOfHabitEditText.text.toString().toInt(),
-                            selectDate = selectedDate,
-                            isSetTimeOrNumHabit = true
-                        )
-                    }
-                    Log.v("completionRecord", "" + completionRecord)
-                    completionRecordDAO.insertCompletionRecord(completion)
-
-                    taskListHandle[position].completionRecord = completion
-                    recyclerviewAdapter?.updateItemImage(position)
+            val completion: CompletionRecord
+            if (completionRecord == null) {
+                completion = if (habit.schedule?.numOfTime != 0) {
+                    habit.completionRecordForToday(
+                        numOfTimesCompleted = numOfHabitEditText.text.toString().toInt(),
+                        timeForHabit = 0,
+                        selectDate = selectedDate,
+                        isSetTimeOrNumHabit = true
+                    )
                 } else {
-                    completion = if (habit.schedule?.numOfTime != 0) {
-                        habit.completionRecordForToday(
-                            numOfTimesCompleted = numOfHabitEditText.text.toString().toInt(),
-                            timeForHabit = 0,
-                            selectDate = selectedDate,
-                            isSetTimeOrNumHabit = true
-                        )
-                    } else {
-                        habit.completionRecordForToday(
-                            numOfTimesCompleted = 0,
-                            timeForHabit = numOfHabitEditText.text.toString().toInt(),
-                            selectDate = selectedDate,
-                            isSetTimeOrNumHabit = true
-                        )
-                    }
-                    Log.v("completionRecord", "" + completionRecord)
-                    completionRecordDAO.updateCompletionRecord(completion, selectedDate)
-
-                    taskListHandle[position].completionRecord = completion
-                    recyclerviewAdapter?.updateItemImage(position)
+                    habit.completionRecordForToday(
+                        numOfTimesCompleted = 0,
+                        timeForHabit = numOfHabitEditText.text.toString().toInt(),
+                        selectDate = selectedDate,
+                        isSetTimeOrNumHabit = true
+                    )
                 }
+                Log.v("completionRecord", "" + completionRecord)
+                completionRecordDAO.insertCompletionRecord(completion)
 
+                taskListHandle[position].completionRecord = completion
+                recyclerviewAdapter?.updateItemImage(position)
+            } else {
+                completion = if (habit.schedule?.numOfTime != 0) {
+                    habit.completionRecordForToday(
+                        numOfTimesCompleted = numOfHabitEditText.text.toString().toInt(),
+                        timeForHabit = 0,
+                        selectDate = selectedDate,
+                        isSetTimeOrNumHabit = true
+                    )
+                } else {
+                    habit.completionRecordForToday(
+                        numOfTimesCompleted = 0,
+                        timeForHabit = numOfHabitEditText.text.toString().toInt(),
+                        selectDate = selectedDate,
+                        isSetTimeOrNumHabit = true
+                    )
+                }
+                Log.v("completionRecord", "" + completionRecord)
+                completionRecordDAO.updateCompletionRecord(completion, selectedDate)
 
+                taskListHandle[position].completionRecord = completion
+                recyclerviewAdapter?.updateItemImage(position)
             }
 
             dialog.dismiss()

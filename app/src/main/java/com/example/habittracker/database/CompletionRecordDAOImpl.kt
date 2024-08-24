@@ -20,6 +20,7 @@ class CompletionRecordDAOImpl(private val context: Context, private val dbHelper
             put(DatabaseHelper.COLUMN_HISTORY_TIME_FOR_HABIT, completionRecord.timeForHabit)
             put(DatabaseHelper.COLUMN_HISTORY_IS_COMPLETED, completionRecord.isCompleted)
             put(DatabaseHelper.COLUMN_HISTORY_HABIT_ID, completionRecord.habitId)
+            put(DatabaseHelper.COLUMN_HISTORY_CURRENT_OPERATIONAL_STATUS, completionRecord.currentOperationalStatus)
         }
         return db.insertOrThrow(DatabaseHelper.TABLE_HISTORY, null, values)
     }
@@ -41,6 +42,24 @@ class CompletionRecordDAOImpl(private val context: Context, private val dbHelper
         }
     }
 
+    override fun getCompletionRecordByHabitId(habitId: String): MutableList<CompletionRecord> {
+        val db = dbHelper.readableDatabase
+        val sql = """SELECT * 
+            FROM ${DatabaseHelper.TABLE_HISTORY} 
+            WHERE ${DatabaseHelper.COLUMN_HISTORY_HABIT_ID} = :habitId
+             AND ${DatabaseHelper.COLUMN_HISTORY_CURRENT_OPERATIONAL_STATUS} = 1"""
+        val cursor = db.rawQuery(sql, arrayOf(habitId))
+        val completionRecords = ArrayList<CompletionRecord>()
+        if (cursor.moveToFirst()) {
+            do {
+                completionRecords.add(cursorCompletionRecord(cursor))
+            }while (cursor.moveToNext())
+
+        }
+        cursor.close()
+        return completionRecords
+    }
+
     override fun getCompletionRecordInMonthByHabitId(habitId: String, date: LocalDate): ArrayList<CompletionRecord> {
         val monthFormatter = DateTimeFormatter.ofPattern("MM")
         val month = date.format(monthFormatter)
@@ -49,7 +68,8 @@ class CompletionRecordDAOImpl(private val context: Context, private val dbHelper
         val sql = """SELECT * 
             FROM ${DatabaseHelper.TABLE_HISTORY} 
             WHERE ${DatabaseHelper.COLUMN_HISTORY_HABIT_ID} = :habitId
-            AND strftime('%m', ${DatabaseHelper.COLUMN_HISTORY_DATE}) = :month"""
+            AND strftime('%m', ${DatabaseHelper.COLUMN_HISTORY_DATE}) = :month
+            AND ${DatabaseHelper.COLUMN_HISTORY_CURRENT_OPERATIONAL_STATUS} = 1"""
         val cursor = db.rawQuery(sql, arrayOf(habitId, month))
         val completionRecords = ArrayList<CompletionRecord>()
         if (cursor.moveToFirst()) {
@@ -94,11 +114,33 @@ class CompletionRecordDAOImpl(private val context: Context, private val dbHelper
 
         // Create a list of HabitHandle, including habits without CompletionRecord
         val habitHandles = habits.map { habit ->
-            val completionRecord = completionRecordsMap[habit.id.toString()] // Get the completion record if it exists
+            val completionRecord = completionRecordsMap[habit.id.toString()]
             HabitHandle(habit, completionRecord)
         }
         return habitHandles
     }
+
+    override fun deleteCompletionRecordById(habitId: String): Int {
+        val db = dbHelper.writableDatabase
+        return db.delete(
+            DatabaseHelper.TABLE_HISTORY,
+            "${DatabaseHelper.COLUMN_HISTORY_HABIT_ID} = ?",
+            arrayOf(habitId)
+        )
+    }
+
+    override fun updateActiveCompletion(completionRecord: CompletionRecord): Int {
+        val db = dbHelper.writableDatabase
+        val contentValues = ContentValues().apply {
+            put(DatabaseHelper.COLUMN_HISTORY_CURRENT_OPERATIONAL_STATUS, completionRecord.currentOperationalStatus)
+        }
+        val whereClause = "${DatabaseHelper.COLUMN_HISTORY_HABIT_ID} = ? AND ${DatabaseHelper.COLUMN_HISTORY_DATE} =  ?"
+
+        val whereArgs = arrayOf(completionRecord.habitId.toString(), completionRecord.date)
+
+        return db.update(DatabaseHelper.TABLE_HISTORY, contentValues, whereClause, whereArgs)
+    }
+
     override fun updateCompletionRecord(completionRecord: CompletionRecord, date: LocalDate): Int {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val selectDate = date.format(formatter)
@@ -123,6 +165,7 @@ class CompletionRecordDAOImpl(private val context: Context, private val dbHelper
         val timeForHabit = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_HISTORY_TIME_FOR_HABIT))
         val isCompleted =cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_HISTORY_IS_COMPLETED))
         val habitId =cursor.getLong(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_HISTORY_HABIT_ID))
-        return CompletionRecord(date,numOfTimesCompleted, timeForHabit, isCompleted, habitId)
+        val currentOperationalStatus =cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_HISTORY_CURRENT_OPERATIONAL_STATUS))
+        return CompletionRecord(date,numOfTimesCompleted, timeForHabit, isCompleted, habitId, currentOperationalStatus)
     }
 }

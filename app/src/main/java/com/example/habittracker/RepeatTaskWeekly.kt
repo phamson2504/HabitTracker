@@ -26,11 +26,23 @@ class RepeatTaskWeekly : Fragment() {
         val spinner: Spinner = view.findViewById(R.id.spinner)
         val items = listOf("1 week", "2 week", "3 week", "4 week", "5 week", "6 week")
 
+        var selectPosition = -1
+
+        arguments?.let {
+            pickedListDate = it.getStringArrayList(ARG_REPEAT_TASK_WEEKLY) as ArrayList<String>
+            selectedEveryRepeat = it.getString(ARG_SELECTED_EVERY_REPEAT) as String
+            selectPosition = items.indexOf(selectedEveryRepeat)
+        }
+
+
         val adapterSpinner =
             ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, items)
         adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapterSpinner
 
+        if (selectPosition != -1 ){
+            spinner.setSelection(selectPosition)
+        }
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>,
@@ -65,10 +77,7 @@ class RepeatTaskWeekly : Fragment() {
                 handleDaySelection(textClick, day)
             }
         }
-        arguments?.let {
-            pickedListDate = it.getStringArrayList(ARG_REPEAT_TASK_WEEKLY) as ArrayList<String>
-            selectedEveryRepeat = it.getString(ARG_SELECTED_EVERY_REPEAT) as String
-        }
+
         if (pickedListDate.size != 0){
             dayButtonMap.forEach { (textId, day) ->
                 val textClick = view.findViewById<TextView>(textId)

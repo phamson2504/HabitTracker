@@ -21,6 +21,7 @@ class RepeatTaskMonthly : Fragment(), OnDayClickListener {
     private var pickedListDate = ArrayList<String>()
     private var dataPassDaysPickOfMonthLy: OnDataPassDaysPickOfMonthLy? = null
     private lateinit var selectedEveryRepeat: String
+    private var numOfMonthRepeat: Int = -1
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,22 +36,28 @@ class RepeatTaskMonthly : Fragment(), OnDayClickListener {
         val numbersListDay = (1..31).map { it.toString() }
         val days: ArrayList<String> = ArrayList(numbersListDay)
         days.add("last")
+
+        val items = listOf("1 month", "2 month", "3 month", "4 month", "5 month", "6 month")
+
         arguments?.let {
             pickedListDate = it.getStringArrayList(ARG_REPEAT_TASK_MONTHLY) as ArrayList<String>
+            daysPickForMonthly =  it.getStringArrayList(ARG_REPEAT_TASK_MONTHLY) as ArrayList<String>
+            numOfMonthRepeat = items.indexOf("${it.getInt(ARG_NUM_OF_MONTH_REPEAT)} month")
         }
 
         val adapter = DayForMonthlyAdapter(requireContext(), days, this, pickedListDate)
         recyclerView.adapter = adapter
 
         val spinner: Spinner = view.findViewById(R.id.spinner)
-        val items = listOf("1 month", "2 month", "3 month", "4 month", "5 month", "6 month")
+
 
         val adapterSpinner =
             ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, items)
         adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapterSpinner
 
-
+        if (numOfMonthRepeat != -1)
+            spinner.setSelection(numOfMonthRepeat)
 
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
@@ -96,10 +103,12 @@ class RepeatTaskMonthly : Fragment(), OnDayClickListener {
     }
     companion object {
         private const val ARG_REPEAT_TASK_MONTHLY = "repeat_task_monthly"
+        private const val ARG_NUM_OF_MONTH_REPEAT = "num_of_month_repeat"
         @JvmStatic
-        fun newInstance(taskList: List<String>?) = RepeatTaskMonthly().apply {
+        fun newInstance(taskList: List<String>?, numOfMonthRepeat :Int) = RepeatTaskMonthly().apply {
             arguments = Bundle().apply {
                 putStringArrayList(ARG_REPEAT_TASK_MONTHLY, taskList?.let { ArrayList(it) })
+                putInt(ARG_NUM_OF_MONTH_REPEAT,numOfMonthRepeat)
             }
         }
     }

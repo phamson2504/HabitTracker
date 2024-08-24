@@ -2,13 +2,17 @@ package com.example.habittracker.ui
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.app.Dialog
 import android.app.TimePickerDialog
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -18,6 +22,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.example.habittracker.R
 import com.example.habittracker.RepeatTaskMonthly
 import com.example.habittracker.RepeatTaskWeekly
@@ -30,8 +35,13 @@ import com.example.habittracker.entity.HabitHandle
 import com.example.habittracker.model.Habit
 import com.example.habittracker.model.Schedule
 import com.google.android.material.switchmaterial.SwitchMaterial
+import com.larswerkman.holocolorpicker.ColorPicker
+import com.larswerkman.holocolorpicker.ColorPicker.OnColorChangedListener
+import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDeleteListener,
     OnDataPassDaysPickOfMonthLy, OnDataPassDatePickOfWeekly {
@@ -54,14 +64,24 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
     private var habitHandle: HabitHandle? = null
     private val daysPickMonthly = ArrayList<String>()
     private var everyRepeatWeekly = 0
+    private var everyRepeatMonthly = 0
     private lateinit var dataByTypeOfTime: MutableMap<Int, Boolean>
     private lateinit var habitDAO: HabitDAOImpl
     private val dbHelper = DatabaseHelper(this)
+    private lateinit var mySwitch: SwitchMaterial
+    private var selectedColorHex: String = "#D6E0E2"
+    private lateinit var txtEmoji: TextView
+    private lateinit var colorPicked : View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_schedule_edit)
+
+        // Set status bar color
+        window.statusBarColor = ContextCompat.getColor(this, R.color.navigation_bar_color)
+        // Optional: Adjust status bar icon color
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
 
         habitDAO = HabitDAOImpl(this, dbHelper)
 
@@ -167,10 +187,10 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
         textNameHabit.text = habitHandle?.habit?.name
 
         if (habitHandle?.habit?.schedule?.numOfTime  != 0){
-            txtNumOfTimes.performClick()
+            txtTimeForHabit.performClick()
             numOrTimeHabit.text = habitHandle?.habit?.schedule?.numOfTime.toString()
         }else if (habitHandle?.habit?.schedule?.timeForHabit != 0){
-            txtTimeForHabit.performClick()
+            txtNumOfTimes.performClick()
             numOrTimeHabit.text = habitHandle?.habit?.schedule?.timeForHabit.toString()
         }
 
@@ -187,11 +207,12 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
         var repeatTaskWeekly = RepeatTaskWeekly()
 
         if ( schedule is Schedule.MonthlySchedule) {
-            repeatTaskMonthly = RepeatTaskMonthly.newInstance(schedule.dateInMonth)
+            repeatTaskMonthly = RepeatTaskMonthly.newInstance(schedule.dateInMonth, schedule.numOfMonthRepeat)
+
         }else if (schedule is Schedule.WeeklySchedule){
             repeatTaskWeekly = RepeatTaskWeekly.newInstance(
                 schedule.daysInWeek,
-                schedule.numOfWeekRepeat.toString() + " Week"
+                schedule.numOfWeekRepeat.toString() + " week"
             )
         }
 
@@ -217,7 +238,7 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
             monthlyClick(repeatTaskMonthly)
         }
         if (!schedule?.dueDay.equals("")){
-            textDuDate.text = schedule?.dueDay
+            textDuDate.text = convertDateToDisplay(schedule?.dueDay.toString())
         }
 
 
@@ -232,7 +253,7 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
         }
 
         val myLayout: LinearLayout = findViewById(R.id.layout_repeat)
-        val mySwitch: SwitchMaterial = findViewById(R.id.material_switch)
+        mySwitch = findViewById(R.id.material_switch)
         mySwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 myLayout.visibility = View.VISIBLE
@@ -304,26 +325,110 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
             showEditTextDialog()
         }
 
+
         txtNote.text = habit?.description
 
         adapter = ItemTimeRemindAdapter(this, timeReminds, this)
 
         listView.adapter = adapter
 
+        textStartDate.setText(convertDateToDisplay(schedule.startDate))
+
+        val txtSave: TextView = findViewById(R.id.saveEdit)
+        txtSave.setOnClickListener {
+            if (saveEditHabit(habit!!)){
+                val intent = Intent(this, MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                intent.putExtra("ACTION", "NAVIGATE_TO_CALENDAR")
+                startActivity(intent)
+            }
+        }
+        if (habit?.color != null){
+            selectedColorHex = habit.color
+        }
+        txtEmoji = findViewById(R.id.iconForHabitEdit)
+        if (habit?.icon != null){
+            txtEmoji.text = habit.icon
+        }
+
+        colorPicked = findViewById(R.id.colorHabitPickedEdit)
+        val chooseEmojiClick =findViewById<View>(R.id.linearLayoutChoseEmojiEdit)
+        chooseEmojiClick.setOnClickListener {
+            showEmojiPickerDialog()
+        }
+        val choseColor :View = findViewById(R.id.choseColorEdit)
+        choseColor.setOnClickListener {
+            showColorPickerDialog()
+        }
+
     }
-    private fun saveEditHabit() : Boolean {
-        val habit: Habit
+    private fun showEmojiPickerDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_emoji_picker, null)
+        val emojiEditText = dialogView.findViewById<EditText>(R.id.emojiEditText)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Pick an Emoji")
+            .setView(dialogView)
+            .setPositiveButton("OK") { dialog, _ ->
+                val emoji = emojiEditText.text.toString()
+                if (isValidEmoji(emoji)) {
+                    txtEmoji.text = emoji
+                }else if (emoji == ""){
+                    txtEmoji.text = "~"
+                }
+                else {
+                    Toast.makeText(this, "Please enter a valid single emoji.", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.show()
+    }
+    private fun isValidEmoji(text: String): Boolean {
+        val emojiRegex = Regex("[\\p{So}\\p{Cn}]") // Regex to match emojis
+        return emojiRegex.containsMatchIn(text) && text.length == 2
+    }
+
+    private fun showColorPickerDialog() {
+        val dialog = Dialog(this)
+        val view: View = LayoutInflater.from(this).inflate(R.layout.dialog_color_picker, null)
+        dialog.setContentView(view)
+
+        val colorPicker = view.findViewById<ColorPicker>(R.id.colorPicker)
+        val btnOk = view.findViewById<Button>(R.id.btnOk)
+
+        colorPicker.addSVBar(view.findViewById(R.id.svbar))
+        colorPicker.addOpacityBar(view.findViewById(R.id.opacitybar))
+        colorPicker.setColor(Color.parseColor(selectedColorHex))
+
+        colorPicker.onColorChangedListener = OnColorChangedListener { color ->
+            // Handle color change
+            selectedColorHex = String.format("#%06X", 0xFFFFFF and colorPicker.color)
+        }
+
+        btnOk.setOnClickListener {
+            val background = colorPicked.background as GradientDrawable
+            background.setColor(Color.parseColor(selectedColorHex))
+            Toast.makeText(this,""+selectedColorHex,Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+    private fun saveEditHabit(habit: Habit) : Boolean {
         var schedule: Schedule? = null
-        textNameHabit
-        txtNote
-        timeReminds
         if (textNameHabit.text.isNullOrBlank()) {
             Toast.makeText(this, "Please enter name habit", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (habitDAO.getHabitByName(textNameHabit.text.toString()) != null){
-            Toast.makeText(this, "Habit has existed", Toast.LENGTH_SHORT).show()
-            return false
+        val habitFinder = habitDAO.getHabitByName(textNameHabit.text.toString())
+        if (habitFinder != null) {
+            if (habitFinder.id != habit.id) {
+                Toast.makeText(this, "Habit has existed", Toast.LENGTH_SHORT).show()
+                return false
+            }
         }
         val numOfTime = if (dataByTypeOfTime[txtNumOfTimes.id] == true) {
             if (numOrTimeHabit.text.toString() != "") numOrTimeHabit.text.toString().toInt() else 0
@@ -340,89 +445,114 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         // create schedule
-//        if (supportFragmentManager.findFragmentByTag("Monthly_TAG") != null) {
-//            if (daysPickMonthly.size == 0) {
-//                Toast.makeText(this, "Please select at least 1 day", Toast.LENGTH_SHORT).show()
-//            } else {
-//                val dueDate = if (textDuDate.text.toString() == "_/_/_") {
-//                    currentDate.plusWeeks(everyRepeatMonthly.toLong()).format(formatter)
-//                }else{
-//                    convertDate(textDuDate.text.toString()).toString()
-//                }
-//                schedule = Schedule.MonthlySchedule(
-//                    currentDate.format(formatter),
-//                    dueDate,
-//                    numOfTime,
-//                    timeForHabit,
-//                    timeReminds,
-//                    daysPickMonthly,
-//                    everyRepeatMonthly
-//                )
-//            }
-//        } else if (supportFragmentManager.findFragmentByTag("Weekly_TAG") != null) {
-//            if (daysPickWeekly.size == 0) {
-//                Toast.makeText(this, "Please select at least 1 date", Toast.LENGTH_SHORT).show()
-//            } else {
-//                val dueDate = if (textDuDate.text.toString() == "_/_/_") {
-//                    currentDate.plusWeeks(everyRepeatWeekly.toLong()).format(formatter)
-//                }else{
-//                    convertDate(textDuDate.text.toString()).toString()
-//                }
-//                schedule = Schedule.WeeklySchedule(
-//                    currentDate.format(formatter),
-//                    dueDate,
-//                    numOfTime,
-//                    timeForHabit,
-//                    timeReminds,
-//                    daysPickWeekly,
-//                    everyRepeatWeekly
-//                )
-//            }
-//        } else if (mySwitch.isChecked) {
-//            if (textDuDate.text.toString() != "_/_/_"){
-//                schedule = Schedule.ScheduleEveryDayRepeat(
-//                    startDate = currentDate.format(formatter),
-//                    convertDate(textDuDate.text.toString()).toString(),
-//                    numOfTime = numOfTime,
-//                    timeForHabit = timeForHabit,
-//                    timeReminds = timeReminds
-//                )
-//
-//            }else{
-//                schedule = Schedule.ScheduleEveryDayRepeat(
-//                    startDate = currentDate.format(formatter),
-//                    "",
-//                    numOfTime = numOfTime,
-//                    timeForHabit = timeForHabit,
-//                    timeReminds = timeReminds,
-//                    repeatInfinitely = 1
-//                )
-//            }
-//
-//        } else {
-//            schedule = Schedule.ScheduleNotRepeat(
-//                startDate = currentDate.format(formatter),
-//                numOfTime = numOfTime,
-//                timeForHabit = timeForHabit,
-//                timeReminds = timeReminds
-//            )
-//        }
-//        // create habit
-//        if (schedule != null) {
-//            habit = Habit(
-//                name = txtNameHabit.text.toString(),
-//                description = txtNote.text.toString(),
-//                schedule = schedule
-//            )
-//            Log.e("habit", "habit: ${habit}")
-//            habitDAO.insertHabit(habit) { exception ->
-//                Log.e("DatabaseError", "Failed to add habit and schedule: ${exception.message}")
-//            }
-//
-//        }
+        if (supportFragmentManager.findFragmentByTag("Monthly_TAG") != null) {
+            if (daysPickMonthly.size == 0) {
+                Toast.makeText(this, "Please select at least 1 day", Toast.LENGTH_SHORT).show()
+            } else {
+                val dueDate = if (textDuDate.text.toString() == "_/_/_") {
+                    convertToDate(textStartDate.text.toString()).plusWeeks(everyRepeatMonthly.toLong())
+                        .format(formatter)
+                }else{
+                    convertDate(textDuDate.text.toString())
+                }
+                schedule = Schedule.MonthlySchedule(
+                    convertDate(textStartDate.text.toString()),
+                    dueDate,
+                    numOfTime,
+                    timeForHabit,
+                    timeReminds,
+                    daysPickMonthly,
+                    everyRepeatMonthly
+                )
+            }
+        } else if (supportFragmentManager.findFragmentByTag("Weekly_TAG") != null) {
+            if (daysPickWeekly.size == 0) {
+                Toast.makeText(this, "Please select at least 1 date", Toast.LENGTH_SHORT).show()
+            } else {
+                val dueDate = if (textDuDate.text.toString() == "_/_/_") {
+                    convertToDate(textStartDate.text.toString()).plusWeeks(everyRepeatWeekly.toLong()).format(formatter)
+                }else{
+                    convertDate(textDuDate.text.toString())
+                }
+                schedule = Schedule.WeeklySchedule(
+                    convertDate(textStartDate.text.toString()),
+                    dueDate,
+                    numOfTime,
+                    timeForHabit,
+                    timeReminds,
+                    daysPickWeekly,
+                    everyRepeatWeekly
+                )
+            }
+        } else if (mySwitch.isChecked) {
+            if (textDuDate.text.toString() != "_/_/_"){
+                schedule = Schedule.ScheduleEveryDayRepeat(
+                    startDate = convertDate(textStartDate.text.toString()),
+                    convertDate(textDuDate.text.toString()),
+                    numOfTime = numOfTime,
+                    timeForHabit = timeForHabit,
+                    timeReminds = timeReminds
+                )
+
+            }else{
+                schedule = Schedule.ScheduleEveryDayRepeat(
+                    startDate = convertDate(textStartDate.text.toString()),
+                    "",
+                    numOfTime = numOfTime,
+                    timeForHabit = timeForHabit,
+                    timeReminds = timeReminds,
+                    repeatInfinitely = 1
+                )
+            }
+
+        } else {
+            schedule = Schedule.ScheduleNotRepeat(
+                startDate = convertDate(textStartDate.text.toString()),
+                numOfTime = numOfTime,
+                timeForHabit = timeForHabit,
+                timeReminds = timeReminds
+            )
+        }
+        val editHabit : Habit
+        // create habit
+        if (schedule != null) {
+            var iconHabit  = ""
+            if (txtEmoji.text.toString() != "~"){
+                iconHabit = txtEmoji.text.toString()
+            }
+            editHabit = Habit(
+                id = habit.id,
+                name = textNameHabit.text.toString(),
+                description = txtNote.text.toString(),
+                schedule = schedule,
+                color = selectedColorHex,
+                icon = iconHabit
+            )
+
+            habitDAO.updateHabit(editHabit) { exception ->
+                Log.e("DatabaseError", "Failed to edit habit and schedule: ${exception.message}")
+            }
+
+        }
         return true
     }
 
+    private fun convertDate(dateString: String): String {
+        val inputFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = inputFormat.parse(dateString)
+        return outputFormat.format(date!!)
+    }
+    private fun convertDateToDisplay(dateString: String): String {
+        val outputFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = inputFormat.parse(dateString)
+        return outputFormat.format(date!!)
+    }
+    private fun convertToDate(dateString: String) : LocalDate {
+        val inputFormatter = DateTimeFormatter.ofPattern("d/M/yyyy")
+        return LocalDate.parse(dateString, inputFormatter)
+    }
     override fun onBackPressed() {
         super.onBackPressed()
         finish()
@@ -563,8 +693,9 @@ class ScheduleEditActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDe
     }
 
     override fun onDataPassDaysPickOfMonthLy(days: List<String>, everyRepeat: Int) {
+        daysPickMonthly.clear()
         daysPickMonthly.addAll(days)
-        Toast.makeText(this, "Received date: $days, $everyRepeat", Toast.LENGTH_SHORT).show()
+        everyRepeatMonthly = everyRepeat
     }
 
     override fun onDataPassDate(days: List<String>, everyRepeat: Int) {

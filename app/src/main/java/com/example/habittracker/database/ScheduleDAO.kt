@@ -7,5 +7,5 @@ interface ScheduleDAO {
     fun insertSchedule(schedule: Schedule): Long
     fun getScheduleByIdHabit(idHabit: Long):  Schedule?
     fun updateSchedule(schedule: Schedule): Int
-    fun deleteSchedule(id: Long): Int
+    fun deleteSchedule(habitId: String): Int
 }

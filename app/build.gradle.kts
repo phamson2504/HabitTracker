@@ -49,10 +49,10 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation("androidx.recyclerview:recyclerview:1.2.1")
-    implementation("com.android.support:cardview-v7:22.0.0")
+    implementation("androidx.cardview:cardview:1.0.0")
     implementation("com.jakewharton.threetenabp:threetenabp:1.3.1")
     implementation("androidx.sqlite:sqlite:2.1.0")
-    implementation("com.google.android.material:material:1.7.0")
+    implementation("com.google.android.material:material:1.9.0")
 
     implementation("androidx.drawerlayout:drawerlayout:1.1.1")
     implementation("androidx.navigation:navigation-ui-ktx:2.3.5")
@@ -60,5 +60,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.8")
 
     implementation("com.daimajia.swipelayout:library:1.2.0@aar")
+    implementation("com.larswerkman:HoloColorPicker:1.5")
 
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

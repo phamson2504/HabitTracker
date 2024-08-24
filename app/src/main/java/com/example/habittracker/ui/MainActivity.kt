@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
@@ -33,6 +34,9 @@ class MainActivity : AppCompatActivity(),
         navController = navHostFragment.navController
 
         bottomNavView.setupWithNavController(navController)
+        val colorStateList = ContextCompat.getColorStateList(this, R.color.bottom_nav_item_color)
+        bottomNavView.itemIconTintList = colorStateList
+        bottomNavView.itemTextColor = colorStateList
 
         bottomNavView.setOnNavigationItemSelectedListener(this)
 
@@ -59,26 +63,21 @@ class MainActivity : AppCompatActivity(),
         return navController.navigateUp(drawerLayout) || super.onSupportNavigateUp()
     }
 
-    override fun onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
-    }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.navigation_tasks -> {
                 navController.navigate(R.id.navigation_tasks)
-                drawerLayout.closeDrawer(GravityCompat.START)
                 return true
             }
             R.id.navigation_calendar -> {
                 navController.navigate(R.id.navigation_calendar)
-                drawerLayout.closeDrawer(GravityCompat.START)
                 return true
             }
+//            R.id.navigation_progress -> {
+//                navController.navigate(R.id.navigation_progress)
+//                return true
+//            }
         }
         return false
     }

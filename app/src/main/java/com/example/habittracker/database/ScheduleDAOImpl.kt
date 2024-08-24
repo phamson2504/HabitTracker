@@ -6,7 +6,8 @@ import android.database.Cursor
 import com.example.habittracker.model.Schedule
 import com.google.gson.Gson
 
-class ScheduleDAOImpl(private val context: Context, private val dbHelper: DatabaseHelper) : ScheduleDAO {
+class ScheduleDAOImpl(private val context: Context, private val dbHelper: DatabaseHelper) :
+    ScheduleDAO {
 
     private val gson = Gson()
 
@@ -30,14 +31,18 @@ class ScheduleDAOImpl(private val context: Context, private val dbHelper: Databa
                 }
 
                 is Schedule.MonthlySchedule -> {
-                    put(DatabaseHelper.COLUMN_SCHEDULE_DATE_IN_MONTH,  gson.toJson(schedule.dateInMonth))
+                    put(
+                        DatabaseHelper.COLUMN_SCHEDULE_DATE_IN_MONTH,
+                        gson.toJson(schedule.dateInMonth)
+                    )
                     put(
                         DatabaseHelper.COLUMN_SCHEDULE_NUM_OF_MONTH_REPEAT,
                         schedule.numOfMonthRepeat
                     )
                 }
+
                 is Schedule.ScheduleEveryDayRepeat -> {
-                    if (schedule.dueDay == ""){
+                    if (schedule.dueDay == "") {
                         put(
                             DatabaseHelper.COlUMN_SCHEDULE_REPEAT_INFINITELY,
                             schedule.repeatInfinitely
@@ -53,7 +58,8 @@ class ScheduleDAOImpl(private val context: Context, private val dbHelper: Databa
 
     override fun getScheduleByIdHabit(idHabit: Long): Schedule? {
         val db = dbHelper.readableDatabase
-        val sql = "SELECT * FROM ${DatabaseHelper.TABLE_SCHEDULE} WHERE ${DatabaseHelper.COLUMN_SCHEDULE_HABIT_ID} = ?"
+        val sql =
+            "SELECT * FROM ${DatabaseHelper.TABLE_SCHEDULE} WHERE ${DatabaseHelper.COLUMN_SCHEDULE_HABIT_ID} = ?"
         val cursor = db.rawQuery(sql, arrayOf(idHabit.toString()))
 
         return if (cursor.moveToFirst()) {
@@ -65,15 +71,60 @@ class ScheduleDAOImpl(private val context: Context, private val dbHelper: Databa
 
 
     override fun updateSchedule(schedule: Schedule): Int {
-        TODO("Not yet implemented")
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put(DatabaseHelper.COLUMN_SCHEDULE_START_DATE, schedule.startDate)
+            put(DatabaseHelper.COLUMN_SCHEDULE_TYPE, schedule.scheduleType)
+            put(DatabaseHelper.COLUMN_SCHEDULE_DUE_DATE, schedule.dueDay)
+            put(DatabaseHelper.COLUMN_SCHEDULE_NUM_OF_TIMES, schedule.numOfTime)
+            put(DatabaseHelper.COLUMN_SCHEDULE_TIME_FOR_HABIT, schedule.timeForHabit)
+            put(DatabaseHelper.COLUMN_SCHEDULE_TIME_REMINDS, gson.toJson(schedule.timeReminds))
+            put(DatabaseHelper.COLUMN_SCHEDULE_HABIT_ID, schedule.habitId)
+            when (schedule) {
+                is Schedule.WeeklySchedule -> {
+                    put(
+                        DatabaseHelper.COLUMN_SCHEDULE_DAYS_IN_WEEK,
+                        gson.toJson(schedule.daysInWeek)
+                    )
+                    put(DatabaseHelper.COLUMN_SCHEDULE_NUM_OF_WEEK_REPEAT, schedule.numOfWeekRepeat)
+                }
+
+                is Schedule.MonthlySchedule -> {
+                    put(
+                        DatabaseHelper.COLUMN_SCHEDULE_DATE_IN_MONTH,
+                        gson.toJson(schedule.dateInMonth)
+                    )
+                    put(
+                        DatabaseHelper.COLUMN_SCHEDULE_NUM_OF_MONTH_REPEAT,
+                        schedule.numOfMonthRepeat
+                    )
+                }
+
+                is Schedule.ScheduleEveryDayRepeat -> {
+                    if (schedule.dueDay == "") {
+                        put(
+                            DatabaseHelper.COlUMN_SCHEDULE_REPEAT_INFINITELY,
+                            schedule.repeatInfinitely
+                        )
+                    }
+                }
+
+                else -> {}
+            }
+        }
+        return db.update(
+            DatabaseHelper.TABLE_SCHEDULE, values,
+            "${DatabaseHelper.COLUMN_SCHEDULE_HABIT_ID} = ?",
+            arrayOf(schedule.habitId.toString())
+        )
     }
 
-    override fun deleteSchedule(id: Long): Int {
+    override fun deleteSchedule(habitId: String): Int {
         val db = dbHelper.writableDatabase
         return db.delete(
             DatabaseHelper.TABLE_SCHEDULE,
-            "${DatabaseHelper.COLUMN_SCHEDULE_ID} = ?",
-            arrayOf(id.toString())
+            "${DatabaseHelper.COLUMN_SCHEDULE_HABIT_ID} = ?",
+            arrayOf(habitId.toString())
         )
     }
 
@@ -132,13 +183,21 @@ class ScheduleDAOImpl(private val context: Context, private val dbHelper: Databa
                     habitId
                 )
             }
+
             Schedule.ScheduleEveryDayRepeat::class.java.simpleName -> {
                 val repeatInfinitely =
                     cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COlUMN_SCHEDULE_REPEAT_INFINITELY))
                 Schedule.ScheduleEveryDayRepeat(
-                    startDate, dueDay, numOfTime, timeForHabit, timesReminds, habitId, repeatInfinitely
+                    startDate,
+                    dueDay,
+                    numOfTime,
+                    timeForHabit,
+                    timesReminds,
+                    habitId,
+                    repeatInfinitely
                 )
             }
+
             else -> Schedule.ScheduleNotRepeat(
                 startDate, numOfTime, timeForHabit, habitId, timesReminds
             )

@@ -3,39 +3,36 @@ package com.example.habittracker.model
 import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter
 import java.io.Serializable
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 data class Habit(
     val id: Long? = null,
     val name: String,
     val description: String,
     val schedule: Schedule? = null,
-): Serializable {
+    val color: String? = null,
+    val icon: String? = null,
+) : Serializable {
     fun completionRecordForToday(
         numOfTimesCompleted: Int,
         timeForHabit: Int,
         selectDate: LocalDate,
-        isComplete : Boolean = false,
+        isComplete: Boolean = false,
         isSetTimeOrNumHabit: Boolean = false
     ): CompletionRecord {
         val dateStr = selectDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val isCompleted: Int
-        if (isSetTimeOrNumHabit){
+        if (isSetTimeOrNumHabit) {
             var rateCompleted = 0f
-            if (numOfTimesCompleted != 0){
-                rateCompleted = (numOfTimesCompleted).toFloat()/schedule?.numOfTime!!
+            if (numOfTimesCompleted != 0) {
+                rateCompleted = (numOfTimesCompleted).toFloat() / schedule?.numOfTime!!
+            } else if (timeForHabit != 0) {
+                rateCompleted = (timeForHabit).toFloat() / schedule?.timeForHabit!!
             }
-            else if (timeForHabit != 0){
-                rateCompleted = (timeForHabit).toFloat()/ schedule?.timeForHabit!!
-            }
-            isCompleted = when{
+            isCompleted = when {
                 rateCompleted >= 1f -> 3
                 else -> 0
             }
-        }else{
+        } else {
             isCompleted = if (isComplete) 3 else 0
         }
 
@@ -47,5 +44,33 @@ data class Habit(
             habitId = id ?: 0L
         )
     }
+
+    fun getCompletionRecordForToday(
+        numOfTimesCompleted: Int,
+        timeForHabit: Int,
+        selectDate: String,
+    ): CompletionRecord {
+        val isCompleted: Int
+
+        var rateCompleted = 0f
+        if (numOfTimesCompleted != 0 && schedule?.numOfTime != 0) {
+            rateCompleted = (numOfTimesCompleted).toFloat() / schedule?.numOfTime!!
+        } else if (timeForHabit != 0 && schedule?.timeForHabit != 0) {
+            rateCompleted = (timeForHabit).toFloat() / schedule?.timeForHabit!!
+        }
+        isCompleted = when {
+            rateCompleted >= 1f -> 3
+            else -> 0
+        }
+
+        return CompletionRecord(
+            date = selectDate,
+            numOfTimesCompleted = numOfTimesCompleted,
+            timeForHabit = timeForHabit,
+            isCompleted = isCompleted,
+            habitId = id ?: 0L
+        )
+    }
+
 }
 

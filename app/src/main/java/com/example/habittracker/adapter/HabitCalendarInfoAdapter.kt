@@ -53,7 +53,8 @@ class HabitCalendarInfoAdapter(
         if (dayOfMonthHabit?.contains(cal) == true &&  firstDateInMonth.month == cal.month){
             holder.linearLayout.setBackgroundResource(R.drawable.background_day_calendar_1)
         }
-        if (dayCompleteInMonth.containsKey(displayDay.toString())){
+        if (dayCompleteInMonth.containsKey(displayDay.toString()) && dayOfMonthHabit?.contains(cal) == true
+            &&  firstDateInMonth.month == cal.month){
             val complete = dayCompleteInMonth[displayDay.toString()]
             when (complete) {
                 0 -> {

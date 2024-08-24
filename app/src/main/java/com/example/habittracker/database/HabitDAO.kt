@@ -9,6 +9,7 @@ interface HabitDAO {
     fun getHabitByName(nameHabit: String): Habit?
     fun getAllHabits(): List<Habit>
     fun getHabitsByDate(selectDate: String): List<Habit>
-    fun updateHabit(habit: Habit): Int
-    fun deleteHabit(id: Long): Int
+    fun updateHabit(habit: Habit, onError: (Exception) -> Unit): Boolean
+    fun getHabitsByDate(startDate: String, endDate: String): MutableList<Habit>
+    fun  deleteHabit(habitId: String, onError: (Exception) -> Unit): Boolean
 }

@@ -2,23 +2,30 @@ package com.example.habittracker.ui
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.app.Dialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ListView
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.example.habittracker.R
 import com.example.habittracker.RepeatTaskMonthly
 import com.example.habittracker.RepeatTaskWeekly
@@ -30,8 +37,11 @@ import com.example.habittracker.database.HabitDAOImpl
 import com.example.habittracker.model.Habit
 import com.example.habittracker.model.Schedule
 import com.google.android.material.switchmaterial.SwitchMaterial
+import com.larswerkman.holocolorpicker.ColorPicker
+import com.larswerkman.holocolorpicker.ColorPicker.OnColorChangedListener
 import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter
+import java.text.BreakIterator
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -40,12 +50,14 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
     OnDataPassDaysPickOfMonthLy, OnDataPassDatePickOfWeekly {
 
     private lateinit var textDuDate: TextView
+    private lateinit var txtEmoji: TextView
     private lateinit var txtNumOfTimes: TextView
     private lateinit var txtTimeForHabit: TextView
     private lateinit var txtTask: TextView
     private lateinit var numOrTimeHabit: TextView
     private lateinit var listView: ListView
     private lateinit var txtNameHabit: TextView
+    private lateinit var colorPicked : View
     private lateinit var adapter: ItemTimeRemindAdapter
     private val timeReminds = ArrayList<String>()
     private lateinit var currentDate: LocalDate
@@ -62,12 +74,20 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
     private val dbHelper = DatabaseHelper(this)
     private lateinit var mySwitch: SwitchMaterial
 
+    private var selectedColorHex: String = "#D6E0E2"
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_schedule_add)
+
+        // Set status bar color
+        window.statusBarColor = ContextCompat.getColor(this, R.color.navigation_bar_color)
+        // Optional: Adjust status bar icon color
+        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
+
 
         habitDAO = HabitDAOImpl(this, dbHelper)
 
@@ -279,8 +299,93 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
             }
 
         }
+
+        txtEmoji = findViewById(R.id.iconForHabit)
+        colorPicked = findViewById(R.id.colorHabitPicked)
+        val chooseEmojiClick =findViewById<View>(R.id.linearLayoutChoseEmoji)
+        chooseEmojiClick.setOnClickListener {
+            showEmojiPickerDialog()
+        }
+        val choseColor :View = findViewById(R.id.choseColor)
+        choseColor.setOnClickListener {
+            showColorPickerDialog()
+        }
+
+
+
+    }
+    private fun showEmojiPickerDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_emoji_picker, null)
+        val emojiEditText = dialogView.findViewById<EditText>(R.id.emojiEditText)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Pick an Emoji")
+            .setView(dialogView)
+            .setPositiveButton("OK") { dialog, _ ->
+                val emoji = emojiEditText.text.toString()
+                if (isValidEmoji(emoji)) {
+                    txtEmoji.text = emoji
+                }else if (emoji == ""){
+                    txtEmoji.text = "~"
+                }
+                else {
+                    Toast.makeText(this, "Please enter a valid single emoji.", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.show()
+    }
+    private fun isValidEmoji(text: String): Boolean {
+        val emojiRegex = Regex("[\\p{So}\\p{Cn}]")
+
+        val it = BreakIterator.getCharacterInstance()
+        it.setText(text)
+
+        val emojiCodePoints = mutableListOf<String>()
+        var start = it.first()
+        var end = it.next()
+
+        while (end != BreakIterator.DONE) {
+            val charSequence = text.substring(start, end)
+            if (emojiRegex.containsMatchIn(charSequence)) {
+                emojiCodePoints.add(charSequence)
+            }
+            start = end
+            end = it.next()
+        }
+
+        return emojiCodePoints.size == 1 && text == emojiCodePoints[0]
     }
 
+    private fun showColorPickerDialog() {
+        val dialog = Dialog(this)
+        val view: View = LayoutInflater.from(this).inflate(R.layout.dialog_color_picker, null)
+        dialog.setContentView(view)
+
+        val colorPicker = view.findViewById<ColorPicker>(R.id.colorPicker)
+        val btnOk = view.findViewById<Button>(R.id.btnOk)
+
+        colorPicker.addSVBar(view.findViewById(R.id.svbar))
+        colorPicker.addOpacityBar(view.findViewById(R.id.opacitybar))
+        colorPicker.setColor(Color.parseColor(selectedColorHex))
+
+        colorPicker.onColorChangedListener = OnColorChangedListener { color ->
+            // Handle color change
+            selectedColorHex = String.format("#%06X", 0xFFFFFF and colorPicker.color)
+        }
+
+        btnOk.setOnClickListener {
+            val background = colorPicked.background as GradientDrawable
+            background.setColor(Color.parseColor(selectedColorHex))
+            Toast.makeText(this,""+selectedColorHex,Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
     fun setListViewHeightBasedOnItems() {
         val listAdapter = listView.adapter ?: return
         var totalHeight = 0
@@ -303,9 +408,6 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
     private fun saveHabit() : Boolean {
         val habit: Habit
         var schedule: Schedule? = null
-        txtNameHabit
-        txtNote
-        timeReminds
         if (txtNameHabit.text.isNullOrBlank()) {
             Toast.makeText(this, "Please enter name habit", Toast.LENGTH_SHORT).show()
             return false
@@ -398,10 +500,16 @@ class ScheduleAddActivity : AppCompatActivity(), ItemTimeRemindAdapter.OnItemDel
         }
         // create habit
         if (schedule != null) {
+            var iconHabit  = ""
+            if (txtEmoji.text.toString() != "~"){
+                iconHabit = txtEmoji.text.toString()
+            }
             habit = Habit(
                 name = txtNameHabit.text.toString(),
                 description = txtNote.text.toString(),
-                schedule = schedule
+                schedule = schedule,
+                color = selectedColorHex,
+                icon = iconHabit
             )
             Log.e("habit", "habit: ${habit}")
             habitDAO.insertHabit(habit) { exception ->

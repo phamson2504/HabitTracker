@@ -14,6 +14,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COLUMN_HABIT_ID = "id"
         const val COLUMN_NAME_HABIT = "name"
         const val COLUMN_HABIT_DESCRIPTION = "description"
+        const val COLUMN_HABIT_COLOR = "color"
+        const val COLUMN_HABIT_ICON = "icon"
 
         const val TABLE_SCHEDULE = "schedule"
         const val COLUMN_SCHEDULE_ID = "id"
@@ -37,11 +39,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COLUMN_HISTORY_TIME_FOR_HABIT = "time"
         const val COLUMN_HISTORY_TIMES_COMPLETED = "times_complete"
         const val COLUMN_HISTORY_HABIT_ID = "habit_id"
+        const val COLUMN_HISTORY_CURRENT_OPERATIONAL_STATUS = "current_operational_status"
 
         private const val CREATE_TABLE_HABIT =
             "CREATE TABLE " + TABLE_HABIT + " (" +
                     COLUMN_HABIT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     COLUMN_NAME_HABIT + " TEXT NOT NULL, " +
+                    COLUMN_HABIT_COLOR + " TEXT, " +
+                    COLUMN_HABIT_ICON + " TEXT, " +
                     COLUMN_HABIT_DESCRIPTION + " TEXT)"
 
         private const val CREATE_TABLE_SCHEDULE =
@@ -67,6 +72,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                     COLUMN_HISTORY_TIME_FOR_HABIT + " INTEGER, "+
                     COLUMN_HISTORY_TIMES_COMPLETED + " INTEGER, " +
                     COLUMN_HISTORY_IS_COMPLETED + " INTEGER, " +
+                    COLUMN_HISTORY_CURRENT_OPERATIONAL_STATUS + " INTEGER, " +
                     COLUMN_HISTORY_HABIT_ID + " INTEGER NOT NULL )"
     }
     override fun onCreate(db: SQLiteDatabase?) {
@@ -83,11 +89,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         onCreate(db)
     }
     fun resetDatabase() {
-//        writableDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_HABIT")
-//        writableDatabase?.execSQL(CREATE_TABLE_HABIT)
-//        writableDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_SCHEDULE")
-//        writableDatabase?.execSQL(CREATE_TABLE_SCHEDULE)
         writableDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_HISTORY")
         writableDatabase?.execSQL(CREATE_TABLE_HISTORY)
+        writableDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_HABIT")
+        writableDatabase?.execSQL(CREATE_TABLE_HABIT)
+        writableDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_SCHEDULE")
+        writableDatabase?.execSQL(CREATE_TABLE_SCHEDULE)
     }
 }

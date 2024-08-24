@@ -12,7 +12,12 @@
         tools:layout="@layout/fragment_home" />
     <fragment
         android:id="@+id/navigation_tasks"
-        android:name="com.example.habittracker.TaskHabitFragment"
+        android:name="com.example.habittracker.ui.TaskHabitFragment"
         android:label="Tasks"
         tools:layout="@layout/fragment_task_habit" />
+<!--    <fragment-->
+<!--        android:id="@+id/navigation_progress"-->
+<!--        android:name="com.example.habittracker.ui.StatisticsHabitFragment"-->
+<!--        android:label="Tasks"-->
+<!--        tools:layout="@layout/fragment_statistics_habit" />-->
 </navigation>

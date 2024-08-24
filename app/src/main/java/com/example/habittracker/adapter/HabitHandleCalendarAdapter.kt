@@ -1,11 +1,14 @@
 package com.example.habittracker.adapter
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.RecyclerView
 import com.example.habittracker.R
 import com.example.habittracker.entity.HabitHandle
@@ -17,7 +20,7 @@ class HabitHandleCalendarAdapter(
 ) :
     RecyclerView.Adapter<HabitHandleCalendarAdapter.MyViewHolder>() {
     private var habitList: List<HabitHandle>
-
+    val factor = 0.7f
     init {
         habitList = ArrayList<HabitHandle>()
     }
@@ -53,13 +56,46 @@ class HabitHandleCalendarAdapter(
         holder.rowFG.setOnClickListener {
             onClickHabitListener.onClickHabitTask(habit, position)
         }
-        if (habit.habit.schedule?.numOfTime !=0 || habit.habit.schedule.timeForHabit !=0){
+
+        if (habit.completionRecord?.isCompleted == 0){
+            holder.iconHandle.setImageResource(R.drawable.backgroud_uncheck_swipe_habit)
+        }
+
+        if ( habit.habit.schedule?.numOfTime != 0 || habit.habit.schedule.timeForHabit != 0){
             holder.iconHandle.setImageResource(R.drawable.plus_circle)
+            if (habit.completionRecord != null){
+                habit.completionRecord = habit.habit.getCompletionRecordForToday(
+                    habit.completionRecord!!.numOfTimesCompleted,
+                    habit.completionRecord!!.timeForHabit,
+                    habit.completionRecord!!.date
+                )
+            }
         }
         if (habit.completionRecord?.isCompleted == 3){
-            holder.iconHandle.setImageResource(R.drawable.complete_icon)
-            if (habit.habit.schedule?.numOfTime ==0 && habit.habit.schedule.timeForHabit ==0) holder.tvTaskDesc.text = "Complete"
+                holder.iconHandle.setImageResource(R.drawable.complete_icon)
+                if (habit.habit.schedule?.numOfTime ==0 && habit.habit.schedule.timeForHabit ==0) holder.tvTaskDesc.text = "Complete"
         }
+        if (!habit.habit.icon.isNullOrBlank()){
+            holder.iconHabit.text = habit.habit.icon
+        }else{
+            holder.iconHabit.text = habit.habit.name.first().toString()
+        }
+        if (habit.habit.color != null){
+            val backgroundRow = holder.rowFG.background as GradientDrawable
+            backgroundRow.setColor(Color.parseColor(habit.habit.color))
+            val iconBackgroundColor = ColorUtils.blendARGB(Color.parseColor(habit.habit.color), Color.BLACK, 1 - factor)
+            val iconBackground = holder.layoutIconHabit.background as GradientDrawable
+            iconBackground.setColor(iconBackgroundColor)
+        }else{
+            val defaultBackgroundColor = Color.parseColor("#D6E0E2")
+            val backgroundRow = holder.rowFG.background as GradientDrawable
+            backgroundRow.setColor(defaultBackgroundColor)
+
+            val defaultIconBackground = Color.parseColor("#A8C9D0")
+            val iconBackground = holder.layoutIconHabit.background as GradientDrawable
+            iconBackground.setColor(defaultIconBackground)
+        }
+
     }
 
     override fun getItemCount(): Int {
@@ -76,6 +112,8 @@ class HabitHandleCalendarAdapter(
         val tvTaskDesc: TextView = view.findViewById(R.id.task_desc)
         val rowFG : View = view.findViewById(R.id.rowFG)
         val iconHandle: ImageView = view.findViewById(R.id.plus_circle)
+        val iconHabit: TextView = view.findViewById(R.id.txt_icon_habit)
+        val layoutIconHabit: View = view.findViewById(R.id.layout_icon_habit)
     }
 
     interface OnHabitClickListener {
